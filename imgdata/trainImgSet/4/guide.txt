@@ -1,0 +1,1 @@
+mnist images of label same as this folder name to be populated in this folder
