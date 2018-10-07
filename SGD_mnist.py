@@ -331,11 +331,8 @@ def train(n_epoch=n_epoch, batch_size=batch_size, learning_rate=learning_rate):
 
     best_validation_loss = np.inf
     final_accuracy = 0
-
     threshold = 0.005
-
     history = {'train': [], 'valid': []}
-
 
     for epoch in range(n_epoch):
         valid_loss_accuracy = {'loss': [], 'accu': []}
