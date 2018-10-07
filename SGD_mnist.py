@@ -13,7 +13,7 @@
 ##########################################################################################################
 TEST = True
 
-PREDICT_A_DIGIT = True
+PREDICT_A_DIGIT = False
 
 import numpy as np
 import os
