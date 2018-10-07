@@ -1,16 +1,16 @@
-############################################## dataprocessing #########################################################
-######## Data Generator for MNIST digit gray images ########
-####### By: Subhas Chakraborty Date: 02-Oct-2018 #######
-## First step: Read both train and test images from file system,
-# convert the read images into 1D pixel array to store into pandas dataframe,
-# for training images corresponding label is also appended to the dataframe,
-# save the dataframe  in seperate CSV files for training and testing
-# 2nd step: Use the genertaed CSV files only for all training, validation and trsting purposes
-# Training data read into pandas dataframe, and split into training and validation set which are
-# fed to the model through a data generator function.
-# Test data are unlabelled. To compare predicted values with actuals, actual images are recreated
-# from the test image pixel data to visualize through Matplotlib figure.##
-
+############################################## dataprocessing  ###########################################
+######## Data Generator for MNIST digit gray images  #####################################################
+####### Author: Subhas Chakraborty Date: 02-Oct-2018  ####################################################
+## First step: Read both train and test images from file system, #########################################
+# convert the read images into 1D pixel array to store into pandas dataframe, ############################
+# for training images corresponding label is also appended to the dataframe, #############################
+# save the dataframe  in seperate CSV files for training and testing  ####################################
+# 2nd step: Use the genertaed CSV files only for all training, validation and trsting purposes  ##########
+# Training data read into pandas dataframe, and split into training and validation set which are  ########
+# fed to the model through a data generator function.  ###################################################
+# Test data are unlabelled. To compare predicted values with actuals, actual images are recreated  #######
+# from the test image pixel data to visualize through Matplotlib figure. #################################
+##########################################################################################################
 TEST = True
 
 PREDICT_A_DIGIT = False
@@ -176,10 +176,10 @@ class testDataManager(dataManger):
 ######################################################################################################
 
 ####################################ANN.py##########################################################
-########Simple Artificial Neural Net model############
-#######By: Subhas Chakraborty Date: 03-Oct-2018#######
-#######Input attributes are 2D image pixel values #####
-#####stretched into one dimensional pixel value array##
+######## Simple Artificial Neural Net model############
+####### Author: Subhas Chakraborty Date: 03-Oct-2018#######
+####### Input attributes are 2D image pixel values #####
+##### stretched into one dimensional pixel value array##
 
 #import numpy as np
 
@@ -316,7 +316,8 @@ class ANN():
         self.layers.pop() #Remove the last layer which was appended as output layer in forward pass. It will be again appended during next batch training
 
 
-############################################### Training ####################################################
+############################################### Training  #####################
+#############################Author: Subhas Chakraborty Date: 06-Oct-2018 #####
 n_epoch = 10
 batch_size = 128
 learning_rate = 0.001
