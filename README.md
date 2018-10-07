@@ -10,5 +10,5 @@ Since test data are unlabelled, to compare predicted values for test data with a
 A model built with this neural net is put into Model folder.
 For training, set the global TEST variable to False
 For testing with batch data, set global TEST variable to True and PREDICT_A_DIGIT variable to False
-For predicting a digit by selecting and mnist image tile for digits, set PREDICT_A_DIGIT variable to True
+For predicting a digit by selecting and mnist image tile for digits, set PREDICT_A_DIGIT variable to True.
 Further work is in progress....
