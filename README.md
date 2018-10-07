@@ -8,7 +8,7 @@ Data processing classes are implemented for first deriving the csv data from ima
 Pandas dataframe is used for reading and writing data.
 Since test data are unlabelled, to compare predicted values for test data with actual digits, a data visualization functionality is implemented in dataManager class.
 Training with epoch = 10, batch_size = 128 and learning_rate = 0.001
-A model trained with this neural net is put into Model folder.
+A model trained with this neural net is put into Model folder. validation loss: 0.10527 and accuracy: 0.88798
 For training, set the global TEST variable to False
 For testing with batch data, set global TEST variable to True and PREDICT_A_DIGIT variable to False.
 To stop batch testing, enter 0 in the prompt, else enter any other key.
