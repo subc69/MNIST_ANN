@@ -75,7 +75,6 @@ class dataManger():
             temparr = np.array(['' for i in range(m*m)])
             for i in np.arange(batch_digit_arr.shape[0]):
                 temparr[i] = batch_digit_arr[i]
-            #print(temparr.reshape(m, m))
 
         fig = plt.figure(figsize=(4, 4))
         for i in np.arange(n):
@@ -107,11 +106,12 @@ class trainDataManager(dataManger):
         df = pd.DataFrame()
         for subdir in os.listdir(self.imgpath):
             for imgfl in os.listdir(os.path.join(self.imgpath, subdir)):
-                img = Image.open(os.path.join(self.imgpath, subdir, imgfl))
-                if img.size != IMG_SIZE:
-                    img = img.resize(IMG_SIZE)
-                df1 = pd.DataFrame(np.concatenate((img2nparr(img).reshape(1, img.size[0] * img.size[1] ), np.array(int(subdir)).reshape(1, -1)), axis = 1), columns=None)
-                df = df.append(df1)
+                if imgfl.split('.')[1] == '.jpg' or imgfl.split('.')[1] == '.jpeg' or imgfl.split('.')[1] == '.png':
+                    img = Image.open(os.path.join(self.imgpath, subdir, imgfl))
+                    if img.size != IMG_SIZE:
+                        img = img.resize(IMG_SIZE)
+                    df1 = pd.DataFrame(np.concatenate((img2nparr(img).reshape(1, img.size[0] * img.size[1] ), np.array(int(subdir)).reshape(1, -1)), axis = 1), columns=None)
+                    df = df.append(df1)
 
         with open(self.trainDataPath, 'a') as f:
             df.to_csv(f) #, header=False, index=False)
@@ -154,11 +154,12 @@ class testDataManager(dataManger):
         df = pd.DataFrame()
         #for subdir in os.listdir(self.imgpath):
         for imgfl in os.listdir(self.imgpath):
-            img = Image.open(os.path.join(self.imgpath, imgfl))
-            if img.size != (28, 28):
-                img = img.resize(28, 28)
-            df1 = pd.DataFrame(img2nparr(img).reshape(1, img.size[0] * img.size[1]), columns=None)
-            df = df.append(df1)
+            if imgfl.split('.')[1] == '.jpg' or imgfl.split('.')[1] == '.jpeg' or imgfl.split('.')[1] == '.png':
+                img = Image.open(os.path.join(self.imgpath, imgfl))
+                if img.size != (28, 28):
+                    img = img.resize(28, 28)
+                df1 = pd.DataFrame(img2nparr(img).reshape(1, img.size[0] * img.size[1]), columns=None)
+                df = df.append(df1)
         print("writing....")
         with open(self.testDataPath, 'a') as f:
             df.to_csv(f) #, header=False, index=False)
@@ -337,12 +338,15 @@ def train(n_epoch=n_epoch, batch_size=batch_size, learning_rate=learning_rate):
     ann.addLayer(layer(ann.n_class, activation=ann.output_activation_fn))
 
     best_validation_loss = np.inf
+    final_accuracy = 0
 
-    threshold = 0.02
+    threshold = 0.005
 
     history = {'train': [], 'valid': []}
 
+
     for epoch in range(n_epoch):
+        valid_loss_accuracy = {'loss': [], 'accu': []}
         trian_DM = trainDataManager(train_data_img_path, train_data_path)
         for (i, batchdata_train) in enumerate(trian_DM.feedBatchData(bath_size=batch_size)):
             loss = ann.train(batchdata_train[0], batchdata_train[1], learning_rate=learning_rate)
@@ -351,20 +355,20 @@ def train(n_epoch=n_epoch, batch_size=batch_size, learning_rate=learning_rate):
             print("Epoch: %d, Batch: %d, Training Loss: %.5f, Training Accuracy: %.5f" % (epoch+1, i+1, loss, accuracy) )
             history['train'].append([epoch, i, loss, accuracy])
 
-        this_valid_loss = np.mean([ann.loss(batchdata_valid[0], batchdata_valid[1]) \
-                         for batchdata_valid in trian_DM.feedBatchValidData(bath_size=batch_size)])
-        #this_valid_loss = np.mean([ann.loss(batchdata_valid[0], batchdata_valid[1]) \
-                                   #for batchdata_valid in trian_DM.feedBatchData(type='valid', bath_size=batch_size)])
-        #loss_accuracy = [ann.accuracy(batchdata_valid[1], ann.predict(batchdata_valid[0])) \
-                         #for batchdata_valid in trian_DM.feedBatchData(type='valid')]
+        [(valid_loss_accuracy['loss'].append(ann.loss(batchdata_valid[0], batchdata_valid[1])),
+                        valid_loss_accuracy['accu'].append(ann.accuracy(batchdata_valid[1], ann.predict(batchdata_valid[0])))) \
+                        for batchdata_valid in trian_DM.feedBatchValidData(bath_size=batch_size)]
+        this_valid_loss = np.mean(valid_loss_accuracy['loss'])
+        this_accuracy = np.mean(valid_loss_accuracy['accu'])
         if this_valid_loss < best_validation_loss * (1 - threshold):
             best_validation_loss = this_valid_loss
+            final_accuracy = this_accuracy
             with open(os.path.join(model_folder, 'model01'), 'wb') as f:
                 pkl.dump(ann, f)
-        print("Epoch: %d, Validation Loss: %.5f" % (epoch+1, this_valid_loss))
+        print("Epoch: %d, Validation Loss: %.5f, Validation accuracy: %.5f" % (epoch+1, this_valid_loss, this_accuracy))
 
-        history['valid'].append([epoch, this_valid_loss])
-
+        history['valid'].append([epoch, this_valid_loss, this_accuracy])
+    print('Model saved for validation loss: %.5f and accuracy: %.5f' % (best_validation_loss, final_accuracy))
     return history
 
 def test():
@@ -395,6 +399,8 @@ def main():
         return
     if not TEST:
         history = train()
+        print('Training history: ', history['train'])
+        print('Validation history: ', history['valid'])
     else:
         test()
 
