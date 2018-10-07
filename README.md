@@ -5,5 +5,6 @@ All calculations including forward and back prop are implemented in complete obj
 Sigmoid function is used for activation in each layer.
 The data used for training and testing are mnist image files (.jpg) derived from Kaggle dataset.
 Data processing classes are implemented for first deriving the csv data from image files for training and testing and then retriving data for training and testing through data generators implemented using python, pandas, numpy..
-Then pandas dataframe is used for reading and writing data.
+Pandas dataframe is used for reading and writing data.
+Since test data are unlabelled, to compare predicted values for test data with actual digits, a data visualization functionality is implemented in dataManager class.
 Further work is in progress....
