@@ -153,8 +153,8 @@ class testDataManager(dataManger):
         for imgfl in os.listdir(self.imgpath):
             if imgfl.split('.')[1] == '.jpg' or imgfl.split('.')[1] == '.jpeg' or imgfl.split('.')[1] == '.png':
                 img = Image.open(os.path.join(self.imgpath, imgfl))
-                if img.size != (28, 28):
-                    img = img.resize(28, 28)
+                if img.size != IMG_SIZE: #(28, 28)
+                    img = img.resize(IMG_SIZE)
                 df1 = pd.DataFrame(img2nparr(img).reshape(1, img.size[0] * img.size[1]), columns=None)
                 df = df.append(df1)
         print("writing....")
