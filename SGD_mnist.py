@@ -13,7 +13,7 @@
 ##########################################################################################################
 TEST = True
 
-PREDICT_A_DIGIT = False
+PREDICT_A_DIGIT = True
 
 import numpy as np
 import os
@@ -55,7 +55,7 @@ class dataManger():
         self.imgpath = imgDataPath
         if imgDataPath is not None:
             assert os.path.isdir(self.imgpath) == True
-    #def img2arrlistGenerator(self, lstimgfilenames, numimginabatch=10):
+
     def viewBatchDataDigits(self, batch_data, type='test', pred=None):
         if type == 'test':
             n = len(batch_data)
@@ -66,7 +66,6 @@ class dataManger():
                 for i in np.arange(len(pred)):
                     temparr[i] = pred[i]
                 print(temparr.reshape(m, m))
-
         else:
             n = len(batch_data[0])
             batch_img_arr = batch_data[0]
@@ -75,7 +74,6 @@ class dataManger():
             temparr = np.array(['' for i in range(m*m)])
             for i in np.arange(batch_digit_arr.shape[0]):
                 temparr[i] = batch_digit_arr[i]
-
         fig = plt.figure(figsize=(4, 4))
         for i in np.arange(n):
             img = np.reshape(batch_img_arr[i], IMG_SIZE)
@@ -83,12 +81,12 @@ class dataManger():
             plt.imshow(img)
         plt.show()
 
-    def feedAnImage(self):
+    def feedAnImageData(self):
         Tk().withdraw()
         imgfile = askopenfilename(initialdir=test_data_img_path, title='MNIST Images')
         Tk().destroy()
         img = Image.open(imgfile)
-        return np.asarray(img.resize(IMG_SIZE)).astype(np.uint8).reshape(IMG_SIZE[0] * IMG_SIZE[1])
+        return np.asarray(img.resize(IMG_SIZE)).astype(np.uint8).reshape(1, IMG_SIZE[0] * IMG_SIZE[1])
 
 class trainDataManager(dataManger):
     def __init__(self, imgDataPath=None, traindataPath=train_data_path):
@@ -99,7 +97,6 @@ class trainDataManager(dataManger):
     def trainDataGenerator(self):
         if self.imgpath is None:
             return
-        #assert os.path.isdir(self.imgpath) == True
         if os.path.isfile(self.trainDataPath):
             print('removing...', self.trainDataPath)
             os.remove(self.trainDataPath)
@@ -114,7 +111,7 @@ class trainDataManager(dataManger):
                     df = df.append(df1)
 
         with open(self.trainDataPath, 'a') as f:
-            df.to_csv(f) #, header=False, index=False)
+            df.to_csv(f)
 
     def loadData(self, valid_size = 0.2):
         dataset = pd.read_csv(self.trainDataPath) #shuffle(pd.read_csv(self.trainDataPath))
@@ -231,9 +228,7 @@ class ANN():
             elif l.activation == 'softmax':
                 activation = softmax
             X = np.dot(X, l.W) + l.b if l.activation is None else activation(np.dot(X, l.W) + l.b)
-        #if self.training_on == False:
         self.layers.append(layer(0)) #Adding final layer represening output of neural net. This layer will have no output
-        #self.training_on = True
         self.layers[-1].a = X
         return X #z
 
@@ -243,7 +238,6 @@ class ANN():
         for i in np.arange(len(self.layers) - 2, 0, -1):
             self.layers[i].delta = np.dot(self.layers[i + 1].delta, np.transpose(self.layers[i].W)) * \
                                    self.layers[i].a * (1 - self.layers[i].a)
-            # + self.layers[i].b #
         return np.mean(-(y * np.log(h) + (1 - y) * np.log(1 - h))) if self.layers[-2].activation == 'sigmoid' \
             else np.mean(np.square(self.layers[-1].delta)) / 2
 
@@ -255,9 +249,7 @@ class ANN():
             y = self.one_hot(y)
         else:
             y = y.reshape(-1, 1)
-        #h = self.forward(X)
         loss = self.backward(self.forward(X), y)
-        #print('Loss: ', loss)
         self.applyGrad()
         self.clearData()
         return loss
@@ -380,22 +372,15 @@ def test():
         y_pred = ann.predict(testImgBatch)
         testdataManager.viewBatchDataDigits(testImgBatch, 'test', y_pred)
 
-        text = input()
+        text = input('Enter 0 to stop testing. To continue enter any other key: ')
         if text == '0':
             break
 
 def main():
     if PREDICT_A_DIGIT:
-        dm = dataManger()
-        #while True:
-        #print("Select an image:")
-        data = dm.feedAnImage()
         with open(os.path.join(model_folder, 'model01'), 'rb') as f:
             ann = pkl.load(f)
-            print(ann.predict(data.reshape(1, -1)))
-        text = input()
-        # if text == '0':
-        #     break
+            print(ann.predict(dataManger().feedAnImageData()))
         return
     if not TEST:
         history = train()
