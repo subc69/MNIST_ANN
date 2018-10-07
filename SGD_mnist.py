@@ -316,7 +316,7 @@ class ANN():
         self.layers.pop() #Remove the last layer which was appended as output layer in forward pass. It will be again appended during next batch training
 
 
-###################################################################################################
+############################################### Training ####################################################
 
 n_epoch = 10
 batch_size = 128
