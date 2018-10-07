@@ -1,5 +1,5 @@
 # MNIST_ANN
-This project is for mnist digit classification (learning purpose).
+This project is for mnist digit classification (learning purpose) written in Python 3.6.
 The ANN model is implemented at basic level. Back propagation are implemented by writing the chain rule for differentiation using numpy.
 All calculations including forward and back propagation are implemented in complete object oriented manner.
 Sigmoid function is used for activation in each layer.
