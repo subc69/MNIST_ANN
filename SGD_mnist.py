@@ -11,8 +11,10 @@
 # Test data are unlabelled. To compare predicted values with actuals, actual images are recreated  #######
 # from the test image pixel data to visualize through Matplotlib figure. #################################
 ##########################################################################################################
-TEST = True
 
+GENERATE_DATA = False
+SAVE_PRED = False
+TEST = True
 PREDICT_A_DIGIT = False
 
 import numpy as np
@@ -39,12 +41,17 @@ nparr2img = lambda arr: Image.fromarray(arr)
 train_data_img_path = './imgdata/trainImgSet' #empty - to be filled while preprocessing to create .csv file from images using datagenerator
 test_data_img_path = './imgdata/testImgSet' #few sample test data provided
 
-#data preprocessing output path
-# train_data_path = 'E:/2018_Learning/ML/MNIST/csvdata/train.csv'
-# test_data_path = 'E:/2018_Learning/ML/MNIST/csvdata/test.csv'
 
-train_data_path = './csvdata/train.csv'
-test_data_path = './csvdata/test.csv'
+start_col = 0 #From which col in the CSV file the the pixel data starts. In Kaggle train.csv and test.csv there is no index column.
+#data preprocessing output path
+if start_col == 0 and not GENERATE_DATA:
+    train_data_path = './csvdata/train.csv'
+    test_data_path = './csvdata/test.csv'
+else:
+    train_data_path = './csvdata/train_generated.csv' #Train and test data generated from mnist jpeg images.
+    test_data_path = './csvdata/test_generated.csv'
+
+pred_file_path = './csvdata/Submission.csv'
 
 model_folder = './Model'
 
@@ -118,22 +125,32 @@ class trainDataManager(dataManger):
         self.train_ds, self.valid_ds = train_test_split(dataset, test_size=valid_size, random_state=42)
         self.dataloaded = True
 
-    def feedBatchData(self, type='train', bath_size = 16):
+
+    def feedBatchData(self, type='train', bath_size = 16, start_train_col=1):
         if not self.dataloaded:
             self.loadData()
         ds = self.train_ds
         if type == 'valid':
             ds = self.valid_ds
-        X = ds.iloc[:, 1:-1].values
-        y = ds.iloc[:, -1].values
+        if start_train_col == 1:
+            X = ds.iloc[:, 1:-1].values
+            y = ds.iloc[:, -1].values
+        else:
+            X = ds.iloc[:, 1:].values
+            y = ds.iloc[:, 0].values
         n_batch = X.shape[0] // bath_size #n_batch = 10 for testing the code
         for i in np.arange(n_batch):
             yield X[i*bath_size:i*bath_size+bath_size, :], y[i*bath_size:i*bath_size+bath_size]
 
-    def feedBatchValidData(self, bath_size = 16):
+    def feedBatchValidData(self, bath_size = 16, start_train_col=1):
         ds = self.valid_ds
-        X = ds.iloc[:, 1:-1].values
-        y = ds.iloc[:, -1].values
+        if start_train_col == 1:
+            X = ds.iloc[:, 1:-1].values
+            y = ds.iloc[:, -1].values
+        else:
+            X = ds.iloc[:, 1:].values
+            y = ds.iloc[:, 0].values
+
         n_batch = X.shape[0] // bath_size #n_batch = 10 for testing the code
         for i in np.arange(n_batch):
             yield X[i*bath_size:i*bath_size+bath_size, :], y[i*bath_size:i*bath_size+bath_size]
@@ -162,9 +179,9 @@ class testDataManager(dataManger):
             df.to_csv(f) #, header=False, index=False)
         print("Wrote to ", self.testDataPath)
 
-    def loadTestBatch(self, batch_size=16):
+    def loadTestBatch(self, batch_size=16, start_test_col=1):
         dataset = pd.read_csv(self.testDataPath)
-        X = np.array(dataset.iloc[:, 1:].values).astype(np.uint8)
+        X = np.array(dataset.iloc[:, start_test_col:].values).astype(np.uint8)
         #print(X.shape)
         n_batch = X.shape[0] // batch_size
         for i in np.arange(n_batch):
@@ -307,12 +324,11 @@ class ANN():
         self.input_shape = None
         self.layers.pop() #Remove the last layer which was appended as output layer in forward pass. It will be again appended during next batch training
 
-
 ############################################### Training  #####################
 #############################Author: Subhas Chakraborty Date: 06-Oct-2018 #####
-n_epoch = 10
+n_epoch = 20
 batch_size = 128
-learning_rate = 0.001
+learning_rate = 0.01
 n_predictors = 28 * 28
 n_class = 10
 n_hidden1_nodes = (n_predictors + n_class) // 2
@@ -320,7 +336,13 @@ n_hidden1_nodes = (n_predictors + n_class) // 2
 # n_hidden3_nodes = n_hidden2_nodes // 2
 # n_hidden4_nodes = n_hidden3_nodes // 2
 
-def train(n_epoch=n_epoch, batch_size=batch_size, learning_rate=learning_rate):
+def train(n_epoch=n_epoch, batch_size=batch_size, learning_rate=learning_rate, train_test_from_generated_imgdata=True):
+
+    if train_test_from_generated_imgdata:
+        start_col = 1
+    else:
+        start_col = 0
+
     ann = ANN(n_class, 'sigmoid')
 
     ann = ann.addLayer(layer(n_hidden1_nodes, n_predictors, activation='sigmoid'))
@@ -331,13 +353,13 @@ def train(n_epoch=n_epoch, batch_size=batch_size, learning_rate=learning_rate):
 
     best_validation_loss = np.inf
     final_accuracy = 0
-    threshold = 0.005
+    threshold = 0.001
     history = {'train': [], 'valid': []}
 
     for epoch in range(n_epoch):
         valid_loss_accuracy = {'loss': [], 'accu': []}
         trian_DM = trainDataManager(train_data_img_path, train_data_path)
-        for (i, batchdata_train) in enumerate(trian_DM.feedBatchData(bath_size=batch_size)):
+        for (i, batchdata_train) in enumerate(trian_DM.feedBatchData(bath_size=batch_size, start_train_col=start_col)):
             loss = ann.train(batchdata_train[0], batchdata_train[1], learning_rate=learning_rate)
             accuracy = ann.accuracy(batchdata_train[1], ann.predict(batchdata_train[0]))
             #print(loss, accuracy)
@@ -346,7 +368,7 @@ def train(n_epoch=n_epoch, batch_size=batch_size, learning_rate=learning_rate):
 
         [(valid_loss_accuracy['loss'].append(ann.loss(batchdata_valid[0], batchdata_valid[1])),
                         valid_loss_accuracy['accu'].append(ann.accuracy(batchdata_valid[1], ann.predict(batchdata_valid[0])))) \
-                        for batchdata_valid in trian_DM.feedBatchValidData(bath_size=batch_size)]
+                        for batchdata_valid in trian_DM.feedBatchValidData(bath_size=batch_size, start_train_col=start_col)]
         this_valid_loss = np.mean(valid_loss_accuracy['loss'])
         this_accuracy = np.mean(valid_loss_accuracy['accu'])
         if this_valid_loss < best_validation_loss * (1 - threshold):
@@ -365,22 +387,47 @@ def test():
     ann = pkl.load(f)
     f.close()
     testdataManager = testDataManager(test_data_img_path, test_data_path)
-    for testImgBatch in testdataManager.loadTestBatch(batch_size=16):
+    for testImgBatch in testdataManager.loadTestBatch(batch_size=16, start_test_col=start_col):
         y_pred = ann.predict(testImgBatch)
         testdataManager.viewBatchDataDigits(testImgBatch, 'test', y_pred)
-
         text = input('Enter 0 to stop testing. To continue enter any other key: ')
         if text == '0':
             break
 
+def save_test_pred(file_path):
+    f = open(os.path.join(model_folder, 'model01'), 'rb')
+    ann = pkl.load(f)
+    f.close()
+    pred = []
+    submdict = {'ImageId': [], 'Label': []}
+    testdataManager = testDataManager(test_data_img_path, test_data_path)
+    for testImgBatch in testdataManager.loadTestBatch(batch_size=16, start_test_col=start_col):
+        y_pred = ann.predict(testImgBatch)
+        pred += y_pred.tolist()
+    #np.vstack(np.array(range(len(pred))).astype(np.uint32), pred)
+    #np.vstack(range(1, len(pred)+1), pred)
+    submdict['ImageId'] += range(1, len(pred)+1)
+    submdict['Label'] += pred
+    df = pd.DataFrame(submdict)
+    df.to_csv(file_path, index=False)
+
 def main():
+    if GENERATE_DATA:
+        train_dm = trainDataManager(train_data_img_path, train_data_path)
+        test_dm = testDataManager(test_data_img_path, test_data_path)
+        train_dm.trainDataGenerator()
+        test_dm.testDataGenerator()
+        return
+    if SAVE_PRED:
+        save_test_pred(pred_file_path)
+        return
     if PREDICT_A_DIGIT:
         with open(os.path.join(model_folder, 'model01'), 'rb') as f:
             ann = pkl.load(f)
             print(ann.predict(dataManger().feedAnImageData()))
         return
     if not TEST:
-        history = train()
+        history = train(train_test_from_generated_imgdata=False)
         print('Training history: ', history['train'])
         print('Validation history: ', history['valid'])
     else:
