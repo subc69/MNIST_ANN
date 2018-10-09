@@ -10,7 +10,7 @@ Since test data are unlabelled, to compare predicted values for test data with a
 Training with epoch = 10, batch_size = 128 and learning_rate = 0.001
 A model trained with this neural net is put into Model folder. validation loss: 0.10527 and accuracy: 0.88798
 For training, set the global TEST variable to False
-For testing with batch data, set global TEST variable to True and PREDICT_A_DIGIT variable to False.
+For testing with batch data, set global TEST variable to True, PREDICT_A_DIGIT variable to False, GENERATE_DATA to False and SAVE_PRED to False.
 To stop batch testing, enter 0 in the prompt, else enter any other key.
-For predicting a digit by selecting and mnist image tile for digits, set PREDICT_A_DIGIT variable to True.
+For predicting a digit by selecting and mnist image tile for digits, set PREDICT_A_DIGIT variable to True, GENERATE_DATA to False and SAVE_PRED to False.
 Further work is in progress....
